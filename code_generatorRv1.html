@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generator</title>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Code Gen">
+    <link rel="apple-touch-icon" href="https://i.imgur.com/2s4q2x2.png"> <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: grid; place-content: center; height: 100vh; margin: 0; background-color: #f0f0f0; }
+        .container { text-align: center; padding: 2em; background-color: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        input { font-size: 1.2em; padding: 10px; margin-bottom: 1em; width: 280px; border: 1px solid #ccc; border-radius: 8px; text-align: center; }
+        button { font-size: 1.2em; padding: 10px 20px; border: none; background-color: #007aff; color: white; border-radius: 8px; cursor: pointer; }
+        #result { margin-top: 1em; font-size: 1.8em; font-weight: bold; color: #333; font-family: "SF Mono", "Courier New", monospace; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>NX500 Access Code Generator</h2>
+    <input type="text" id="macInput" placeholder="Enter Key">
+    <br>
+    <button onclick="generateCode()">Generate Code</button>
+    <p id="result"></p>
+</div>
+
+<script>
+    async function generateCode() {
+        // Javascript code is unchanged
+        const macInput = document.getElementById('macInput').value;
+        const resultElement = document.getElementById('result');
+
+        try {
+            const cleanMac = macInput.replace(/[:-\s]/g, '');
+            if (cleanMac.length !== 12) { throw new Error("Invalid Activation Key format."); }
+            const macBytes = new Uint8Array(cleanMac.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+            const hashBuffer = await crypto.subtle.digest('SHA-256', macBytes);
+            const hashArray = new Uint8Array(hashBuffer);
+            const firstFiveBytes = hashArray.slice(0, 5);
+            let largeInteger = 0n;
+            for (const byte of firstFiveBytes) { largeInteger = (largeInteger << 8n) | BigInt(byte); }
+            const finalCode = largeInteger % 10000000000n;
+            resultElement.textContent = String(finalCode).padStart(10, '0');
+        } catch (error) {
+            resultElement.textContent = `Error: ${error.message}`;
+        }
+    }
+</script>
+
+</body>
+</html>
